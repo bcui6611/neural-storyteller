@@ -26,17 +26,23 @@ from collections import OrderedDict, defaultdict, Counter
 from numpy.random import RandomState
 from scipy.linalg import norm
 
-from PIL import Image
-from PIL import ImageFile
+from PIL import Image, ImageFile
+
+import tensorflow as tf
+from vgg19 import VGG19
+
+import keras
+from keras.models import Model
+import numpy as np
+from nltk.tokenize import sent_tokenize, word_tokenize
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
-def story(z, image_loc, k=100, bw=50, lyric=False):
+def story(z, im, k=100, bw=50, lyric=False):
     """
     Generate a story for an image at location image_loc
     """
-    # Load the image
-    rawim, im = load_image(image_loc)
 
     # Run image through convnet
     feats = compute_features(z['net'], im).flatten()
@@ -98,12 +104,7 @@ def load_all():
     print 'Loading and initializing ConvNet...'
 
     if config.FLAG_CPU_MODE:
-        sys.path.insert(0, config.paths['pycaffe'])
-        import caffe
-        caffe.set_mode_cpu()
-        net = caffe.Net(config.paths['vgg_proto_caffe'],
-                        config.paths['vgg_model_caffe'],
-                        caffe.TEST)
+        net = VGG19(weights='imagenet')
     else:
         net = build_convnet(config.paths['vgg'])
 
@@ -136,52 +137,23 @@ def load_all():
 
     return z
 
-def load_image(file_name):
-    """
-    Load and preprocess an image
-    """
-    MEAN_VALUE = numpy.array([103.939, 116.779, 123.68]).reshape((3,1,1))
-    image = Image.open(file_name)
-    im = numpy.array(image)
-
-    # Resize so smallest dim = 256, preserving aspect ratio
-    if len(im.shape) == 2:
-        im = im[:, :, numpy.newaxis]
-        im = numpy.repeat(im, 3, axis=2)
-    h, w, _ = im.shape
-    if h < w:
-        im = skimage.transform.resize(im, (256, w*256/h), preserve_range=True)
-    else:
-        im = skimage.transform.resize(im, (h*256/w, 256), preserve_range=True)
-
-    # Central crop to 224x224
-    h, w, _ = im.shape
-    im = im[h//2-112:h//2+112, w//2-112:w//2+112]
-
-    rawim = numpy.copy(im).astype('uint8')
-
-    # Shuffle axes to c01
-    im = numpy.swapaxes(numpy.swapaxes(im, 1, 2), 0, 1)
-
-    # Convert to BGR
-    im = im[::-1, :, :]
-
-    im = im - MEAN_VALUE
-    return rawim, floatX(im[numpy.newaxis])
-
 def compute_features(net, im):
     """
     Compute fc7 features for im
     """
     if config.FLAG_CPU_MODE:
-        net.blobs['data'].reshape(* im.shape)
-        net.blobs['data'].data[...] = im
-        net.forward()
-        fc7 = net.blobs['fc7'].data
+        from vgg19 import VGG19
+        #from imagenet_utils import preprocess_input, decode_predictions
+        from keras.models import Model
+
+        base_model = VGG19(weights='imagenet')
+        model = Model(input=base_model.input, output=base_model.get_layer('fc2').output)
+        pred_features = model.predict(im)
+        return pred_features
     else:
         fc7 = numpy.array(lasagne.layers.get_output(net['fc7'], im,
                                                     deterministic=True).eval())
-    return fc7
+        return fc7
 
 def build_convnet(path_to_vgg):
     """

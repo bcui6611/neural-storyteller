@@ -1,3 +1,5 @@
+import os
+
 """
 Configuration for the generate module
 """
@@ -12,27 +14,36 @@ FLAG_CPU_MODE = True
 #-----------------------------------------------------------------------------#
 paths = dict()
 
+download_path = '/Users/bcui/dev/neural-storyteller/download/'
+storyteller_path = os.path.join(os.path.sep, download_path, 'neural-storyteller')
+
 # Skip-thoughts
-paths['skmodels'] = '/u/rkiros/public_html/models/'
-paths['sktables'] = '/u/rkiros/public_html/models/'
+paths['skmodels'] = download_path
+paths['sktables'] = download_path
 
 # Decoder
-paths['decmodel'] = '/ais/gobi3/u/rkiros/storyteller/romance.npz'
-paths['dictionary'] = '/ais/gobi3/u/rkiros/storyteller/romance_dictionary.pkl'
+paths['decmodel'] = os.path.join(os.path.sep, storyteller_path, 'romance.npz')
+paths['dictionary'] = os.path.join(os.path.sep, storyteller_path, 'romance_dictionary.pkl')
 
 # Image-sentence embedding
-paths['vsemodel'] = '/ais/gobi3/u/rkiros/storyteller/coco_embedding.npz'
+paths['vsemodel'] = os.path.join(os.path.sep, storyteller_path, 'coco_embedding.npz')
 
 # VGG-19 convnet
-paths['vgg'] = '/ais/gobi3/u/rkiros/vgg/vgg19.pkl'
-paths['pycaffe'] = '/u/yukun/Projects/caffe-run/python'
-paths['vgg_proto_caffe'] = '/ais/guppy9/movie2text/neural-storyteller/models/VGG_ILSVRC_19_layers_deploy.prototxt'
-paths['vgg_model_caffe'] = '/ais/guppy9/movie2text/neural-storyteller/models/VGG_ILSVRC_19_layers.caffemodel'
+paths['vgg'] = os.path.join(os.path.sep, download_path, 'vgg19.pkl')
+
 
 
 # COCO training captions
-paths['captions'] = '/ais/gobi3/u/rkiros/storyteller/coco_train_caps.txt'
+paths['captions'] = os.path.join(os.sep, storyteller_path, 'coco_train_caps.txt')
 
 # Biases
-paths['negbias'] = '/ais/gobi3/u/rkiros/storyteller/caption_style.npy'
-paths['posbias'] = '/ais/gobi3/u/rkiros/storyteller/romance_style.npy'
+paths['negbias'] = os.path.join(os.sep, storyteller_path, 'caption_style.npy')
+paths['posbias'] = os.path.join(os.sep, storyteller_path, 'romance_style.npy')
+
+
+#----------------
+#Run CPU only CNN
+#----------------
+#paths['pycaffe'] = '/u/yukun/Projects/caffe-run/python'
+#paths['vgg_proto_caffe'] = os.path.join(os.sep, download_path, 'VGG_ILSVRC_19_layers_deploy.prototxt')
+#paths['vgg_model_caffe'] = os.path.join(os.sep, download_path, 'VGG_ILSVRC_19_layers.caffemodel')
